@@ -1,7 +1,21 @@
 #!/bin/bash
 usage() {
-echo "---"
-echo "$0 <hostname where database resides> <database name> <database user> <database password> <gcp project> <gcp bucket> <gcp sql instance> <gcp database> <gcp db user> <service account email> <pg dump flags>"
+  cat <<EOF
+Usage: $0 <hostname> <database> <db_user> <db_password> <gcp_project> <gcp_bucket> <gcp_instance> <gcp_db> <gcp_db_user> <service_account_email> <pg_dump_flags>
+
+Parameters:
+  <hostname>               Hostname where the database resides
+  <database>               Name of the database
+  <db_user>                Database user
+  <db_password>            Database password
+  <gcp_project>            Google Cloud Platform project name
+  <gcp_bucket>             GCP storage bucket name
+  <gcp_instance>           GCP SQL instance name
+  <gcp_db>                 GCP database name
+  <gcp_db_user>            GCP database user
+  <service_account_email>  GCP service account email
+  <pg_dump_flags>          Additional flags for pg_dump
+EOF
 }
 
 if [ "$#" -lt 9 ]; then
