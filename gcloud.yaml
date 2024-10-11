@@ -4,7 +4,7 @@ metadata:
   name: gcloud
 spec:
   containers:
-  - image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql:2023-09-12-223736-07ec63e
+  - image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql-gcp-14:2024-10-10-150745-2939c3e
     imagePullPolicy: Always
     name: gcloud
     securityContext:
@@ -24,9 +24,11 @@ spec:
       subPath: ca-bundle.pem
     - mountPath: /data
       name: tmpdir
-    - mountPath: /var/run/secrets/nais.io/migration-user
-      name: migration-user
-      readOnly: true
+    resources:
+      requests:
+        memory: 512Mi
+      limits:
+        memory: 1024Mi
   volumes:
   - configMap:
       defaultMode: 420
@@ -34,7 +36,9 @@ spec:
     name: ca-bundle-pem
   - emptyDir: {}
     name: tmpdir
-  - secret:
-      defaultMode: 420
-      secretName: migration-user
-    name: migration-user
+
+
+#  - secret:
+#      defaultMode: 420
+#      secretName: migration-user
+#    name: migration-user

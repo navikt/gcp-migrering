@@ -1,10 +1,10 @@
 #!/bin/bash
 usage() {
 echo "---"
-echo "$0 <hostname where database resides> <database name> <database user> <database password> <gcp project> <gcp bucket> <gcp sql instance> <gcp database> <gcp db user> <service account email>"
+echo "$0 <hostname where database resides> <database name> <database user> <database password> <gcp project> <gcp sql instance> <gcp database> <gcp db user> <gcp context>"
 }
 
-if [ "$#" -lt 8 ]; then
+if [ "$#" -lt 9 ]; then
   usage
   exit 1
 fi
@@ -20,19 +20,25 @@ GCP_PROJECT=$5 # etterlatte
 GCP_INSTANCE=$6 # etterlatte-behandling
 GCP_DATABASE=$7 # sakogbehandlinger
 GCP_DB_USER=$8 # postgres
-GCP_CONTEXT=$9
+GCP_CONTEXT=$9 # dev-gcp / prod-gcp -- trenger vi?
+
+# kjøre opp proxy
+
+# move database dump to bucket
+gcloud config set project ${GCP_PROJECT}
+# miljø (trenger vi denne ref hvordan vi spesifiserer databaser)
+gcloud auth activate-service-account --key-file /var/run/secrets/nais.io/migration-user/user
+
+# verifisere om vi har tilgang til databasen uten proxy
 
 # dump database
 pg_dump -h ${DB_HOST} -d ${DB_NAME} -U ${DB_USER} --data-only --exclude-table-data=flyway_schema_history -v \
 	> /data/${DB_NAME}.dmp.gz
 
-# move database dump to bucket
-gcloud config set project ${GCP_PROJECT}
-# miljø (trenger vi denne ref hvordan vi spesifiserer databaser)
-gcloud config set context ${GCP_CONTEXT}
-gcloud auth activate-service-account --key-file /var/run/secrets/nais.io/migration-user/user
 
 # import database in gcp
+
+# bytt ut til å heller proxy opp mot databasen, og kjøre en psql import
 gcloud sql import sql ${GCP_INSTANCE} /data/${DB_NAME}.dmp.gz \
   --database=${GCP_DATABASE} \
   --user=${GCP_DB_USER} \
