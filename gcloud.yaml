@@ -2,43 +2,46 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: gcloud
+  labels:
+    app: gcloud
 spec:
   containers:
-  - image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql-gcp-14:2024-10-10-150745-2939c3e
-    imagePullPolicy: Always
-    name: gcloud
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop:
-        - ALL
-      readOnlyRootFilesystem: false
-      runAsNonRoot: true
-      runAsUser: 65532
-      seccompProfile:
-        type: RuntimeDefault
-    volumeMounts:
-    - mountPath: /etc/ssl/ca-bundle.pem
-      name: ca-bundle-pem
-      readOnly: true
-      subPath: ca-bundle.pem
-    - mountPath: /data
-      name: tmpdir
-    resources:
-      requests:
-        memory: 512Mi
-      limits:
-        memory: 1024Mi
+    - image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql-gcp-14:2024-10-10-150745-2939c3e
+      imagePullPolicy: Always
+      name: gcloud
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: false
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      volumeMounts:
+        - mountPath: /etc/ssl/ca-bundle.pem
+          name: ca-bundle-pem
+          readOnly: true
+          subPath: ca-bundle.pem
+        - mountPath: /data
+          name: tmpdir
+        - mountPath: /var/run/secrets/nais.io/migration-user
+          name: migration-user
+          readOnly: true
+      resources:
+        requests:
+          memory: 512Mi
+        limits:
+          memory: 1024Mi
   volumes:
-  - configMap:
-      defaultMode: 420
+    - configMap:
+        defaultMode: 420
+        name: ca-bundle-pem
       name: ca-bundle-pem
-    name: ca-bundle-pem
-  - emptyDir: {}
-    name: tmpdir
-
-
-#  - secret:
-#      defaultMode: 420
-#      secretName: migration-user
-#    name: migration-user
+    - emptyDir: {}
+      name: tmpdir
+    - secret:
+        defaultMode: 420
+        secretName: migration-user
+      name: migration-user
