@@ -2,7 +2,7 @@
 
 Verktøy for å gjennomføre databasemigrering fra on-premises databaser til Google Cloud SQL.
 
-Les mer om migrering med `pg_dump` hos [docs.nais.io](https://docs.nais.io/clusters/migrating-databases-to-gcp/#from-on-premise-postgresql).
+Les mer om migrering med `pg_dump` hos [docs.nais.io](https://docs.nais.io/persistence/postgres/how-to/migrating-databases-to-gcp).
 
 ## Bruk
 Start pod'en som inneholder verktøyene ved å applye til ditt namespace: 
@@ -38,6 +38,6 @@ sh migrate_data.sh DB_HOST DN_NAME DB_USER DB_PASS GCP_PROJECT GCP_BUCKET GCP_IN
 
 [skript for migrering](./migrate_data.sh) dersom man har opprettet secret med secret.yaml og har alle parametere kan dette skriptet brukes for å gjøre hele migreringsjobben. Dvs den lager bøtte, dumper on-prem postgres, setter opp rettigheter som trengs og importerer dumpen til basen i Google Cloud.
 
-[skript for opprydding](./cleanup-migration.sh) sletter pod og secret.
+[skript for opprydding](./cleanup_migration.sh) sletter pod og secret.
 
 [secret](./secret.yaml) kan brukes for å lagre hemmeligheten man benytter for å koble til gcloud/gcp i clusteret. I [gcloud pod spec](./gcloud.yaml) er det referert til navnet på hemmeligheten (migration-user), så denne kubernetes hemmeligheten må hete det samme, evt må man også endre i pod spec.
