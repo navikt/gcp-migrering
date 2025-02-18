@@ -1,3 +1,3 @@
 #!/bin/bash
-kubectl delete pod gcloud
+kubectl delete app gcloud
 kubectl delete secret migration-user

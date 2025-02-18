@@ -1,40 +1,15 @@
-apiVersion: v1
-kind: Pod
+---
+apiVersion: nais.io/v1alpha1
+kind: Application
 metadata:
   name: gcloud
 spec:
-  containers:
-  - image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql:2023-09-12-223736-07ec63e
-    imagePullPolicy: Always
-    name: gcloud
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop:
-        - ALL
-      readOnlyRootFilesystem: false
-      runAsNonRoot: true
-      runAsUser: 65532
-      seccompProfile:
-        type: RuntimeDefault
-    volumeMounts:
-    - mountPath: /etc/ssl/ca-bundle.pem
-      name: ca-bundle-pem
-      readOnly: true
-      subPath: ca-bundle.pem
-    - mountPath: /data
-      name: tmpdir
-    - mountPath: /var/run/secrets/nais.io/migration-user
-      name: migration-user
-      readOnly: true
-  volumes:
-  - configMap:
-      defaultMode: 420
-      name: ca-bundle-pem
-    name: ca-bundle-pem
-  - emptyDir: {}
-    name: tmpdir
-  - secret:
-      defaultMode: 420
-      secretName: migration-user
-    name: migration-user
+  image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql-gcp-14:2025-02-18-113033-c2322f5
+  filesFrom:
+  - secret: migration-user
+    mountPath: /var/run/secrets/nais.io/migration-user
+  - emptyDir:
+    mountPath: /db/.config
+  replicas:
+    max: 1
+    min: 1
