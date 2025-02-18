@@ -1,3 +1,5 @@
 #!/bin/bash
-kubectl delete app gcloud
-kubectl delete secret migration-user
+
+kubectl delete -f gcloud.yaml
+kubectl delete -f secret.yaml
+kubectl delete -f network.yaml

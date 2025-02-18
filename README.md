@@ -1,58 +1,119 @@
-# gcp-migrering
+# etterlatte-gcp-migrering
 
 Verktøy for å gjennomføre databasemigrering fra on-premises databaser til Google Cloud SQL.
 
-Les mer om migrering med `pg_dump` hos [docs.nais.io](https://docs.nais.io/persistence/postgres/how-to/migrating-databases-to-gcp).
+## Forarbeid
 
-## Bruk
+### 1. Start app for migrering
 
-Få tak i token for en egnet Google Service Account og legg inn i [secret.yaml](./secret.yaml).
-Deploy denne til clusteret.
-
-```
-kubectl apply -f secret.yaml
-```
-
-Start appen som inneholder verktøyene ved å applye til ditt namespace: 
+Start pod'en som inneholder verktøyene ved å applye til ditt namespace:
 ```
 kubectl apply -f gcloud.yaml
 ```
 
-Exec inn i pod'en for å kjøre ønskede kommandoer:
-```
-kubectl exec -it <navn på pod> -- sh
-```
+### 2. Generer servicebruker
 
-Kjør skriptet migrate_data.sh eller følg beskrivelsen i ovennevnte dokumentasjon. 
-Parametere for kjøring av skriptet er:
-1. DB_HOST: On-prem postgres server
-2. DN_NAME: On-prem databasenavn
-3. DB_USER: On-prem databasebruker
-4. DB_PASS: On-prem databasepassord
-5. GCP_PROJECT: Prosjektet der databasen ligger i Google Cloud
-6. GCP_BUCKET: Bøtte i Google Cloud der dumpen legges (må være globalt unik)
-7. GCP_INSTANCE: Google Cloud SQL instansnavn (som regel samme som app)
-8. GCP_DATABASE: Google Cloud SQL databasenavn (som regel samme som app)
-9. GCP_DB_USER: Google Cloud SQL databasebruker (som regel samme som app)
-10. GCP_SA_EMAIL: Google Cloud service account 
-11. PG_DUMP_FLAGS: On-prem postgres flagg som skal benyttes ved kjøring av pg_dump
+OBS: Hvis det allerede finnes en servicebruker kan denne benyttes.
 
-```
-sh migrate_data.sh DB_HOST DN_NAME DB_USER DB_PASS GCP_PROJECT GCP_BUCKET GCP_INSTANCE GCP_DATABASE GCP_DB_USER GCP_SA_EMAIL PG_DUMP_FLAGS
-```
+Hvis det _ikke_ finnes servicebruker kan det opprettes i GCP Console:
 
-Når du er ferdig bør du slette secret og app:
-```
-kubectl delete -f gcloud.yaml
-kubectl delete -f secret.yaml
+https://console.cloud.google.com/iam-admin/serviceaccounts/create?walkthrough_id=iam--create-service-account
+
+### 3. Opprett nøkkel for servicebruker
+
+- Gå til [IAM & Admin / Service accounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
+- Velg "actions" -> "Manage keys" -> "Add key"
+- JSON-tokenet som opprettes må så legges i `secret.yaml`
+
+
+### 4. Apply secrets
+
+Når stegene over er utført kan du kjøre:
+
+```shell
+kubectl apply -f secret.yaml
 ```
 
-## Innhold
+_OBS: Pod-en må startes på nytt for at den skal lese nøkkelen som ble lagt til._
 
-[gcloud pod spec](./gcloud.yaml) er pod spec'en som innholder alle verktøy man trenger. Denne er bygget fra [gcloud-psql repository](https://github.com/nais/gcloud-psql). Pod'en har ikke lenger et fysisk volum mountet da dette ikke er støttet on-premises, så dersom man skal eksportere store databaser må man benytte en annen metode. Disk'en tilgjengelig er oppad begrenset til det nodenden kjører på  har tilgjengelig.
 
-[skript for migrering](./migrate_data.sh) dersom man har opprettet secret med secret.yaml og har alle parametere kan dette skriptet brukes for å gjøre hele migreringsjobben. Dvs den lager bøtte, dumper on-prem postgres, setter opp rettigheter som trengs og importerer dumpen til basen i Google Cloud.
+### 5. Apply network
 
-[skript for opprydding](./cleanup_migration.sh) sletter pod og secret.
+For at appen skal kunne kommunisere med andre apper sin database må pod-en sin nettverkspolicy endres.
 
-[secret](./secret.yaml) kan brukes for å lagre hemmeligheten man benytter for å koble til gcloud/gcp i clusteret. I [gcloud app spec](./gcloud.yaml) er det referert til navnet på hemmeligheten (migration-user), så denne kubernetes hemmeligheten må hete det samme, evt må man også endre i app spec.
+Hent ned gjeldende `network.yaml` og kjør: 
+
+```shell
+kubectl apply -f network.yaml
+```
+
+
+### 6. Aktiver servicebruker
+
+Exec inn i pod'en:
+```
+kubectl exec -it <POD_ID> -- sh
+```
+
+Aktiver servicebruker: 
+
+```shell
+gcloud auth activate-service-account --key-file /var/run/secrets/nais.io/migration-user/user
+```
+
+Sett prosjekt (miljø) du skal migrere:
+
+```shell
+gcloud config set project <PROJECT_ID>
+```
+
+## Migrering
+
+### 1. Koble til proxy
+
+Hent ut instansbeskrivelse fra gcloud:
+
+```shell
+gcloud sql instances describe <APP_NAME> --format="get(connectionName)" --project <PROJECT_ID>
+```
+
+Legg den til i dette kallet for å åpne proxy mot databasen:
+
+```shell
+cloud_sql_proxy -enable_iam_login -instances=<INSTANCE_NAME>=tcp:5432 &
+```
+
+OBS: Denne blir startet i bakgrunnen. For å avslutte den og gå mot annen instans/database må du drepe prosessen. 
+Det kan gjøres ved å kjøre: 
+
+```shell
+ls -l /proc/*/exe
+```
+
+Kjør deretter `kill -9 <PID>`
+
+_Gjeldende PID er tallet som står i stien til cloud_sql_proxy. Eks. `/proc/123/exe` betyr at PID er 123._
+
+### 2. Dump data fra database til pod
+
+```shell
+pg_dump -h localhost -p 5432 -U <MIGRATION_USER> -d <DATABASE_NAME> -f /data/dump.sql --data-only --exclude-table-data=flyway_schema_history
+```
+
+### 3. Gjenopprett dumpet data
+
+Når data er dumpet til pod kan det gjenopprettes i ønsket database. 
+
+// TODO: Resten av bruksanvisningen...
+
+https://confluence.adeo.no/display/TE/Migreringssteg+for+database
+
+Dette burde samles på ett sted...
+
+## Cleanup
+
+Når du er ferdig med migrering kan du kjøre `cleanup_migration.sh` fra lokal maskin
+
+```shell
+bash cleanup_migration.sh
+```
