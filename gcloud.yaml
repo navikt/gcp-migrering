@@ -8,7 +8,7 @@ spec:
   filesFrom:
   - secret: migration-user
     mountPath: /var/run/secrets/nais.io/migration-user
-  - emptyDir:
+  - emptyDir: {}
     mountPath: /db/.config
   replicas:
     max: 1
