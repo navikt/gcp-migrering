@@ -10,6 +10,8 @@ spec:
     mountPath: /var/run/secrets/nais.io/migration-user
   - emptyDir: {}
     mountPath: /data
+  - emptyDir: {}
+    mountPath: /db/.config
   replicas:
     max: 1
     min: 1
