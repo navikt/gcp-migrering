@@ -114,12 +114,14 @@ pg_dump -h localhost -p 5432 -U <MIGRATION_USER> -d <DATABASE_NAME> -f /data/dum
 
 ### 3. Gjenopprett dumpet data
 
-Når data er dumpet til pod kan det gjenopprettes i ønsket database. 
+Når data er dumpet til pod kan det gjenopprettes i ønsket database.
 Eksempel
 ```
 cloud_sql_proxy -enable_iam_login -instances=etterlatte-prod-207c:europe-north1:etterlatte-sakogbehandlinger=tcp:5432 &
 psql -h localhost -p 5432 -U migration-user@etterlatte-dev-9b0b.iam sakogbehandlinger -f /data/test.sql
 ```
+OBS: husk å endre instanse basert på miljø.
+Dette finner man ved å kjøre `gcloud projects list`.
 
 https://confluence.adeo.no/display/TE/Migreringssteg+for+database
 
