@@ -13,3 +13,4 @@ spec:
   replicas:
     max: 1
     min: 1
+  webproxy: true
