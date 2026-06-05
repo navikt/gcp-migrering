@@ -4,7 +4,7 @@ kind: Application
 metadata:
   name: gcloud
 spec:
-  image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql-gcp-14:2025-02-18-113033-c2322f5
+  image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql-gcp-18:2026-06-05-102735-c7bb1e3
   filesFrom:
   - secret: migration-user
     mountPath: /var/run/secrets/nais.io/migration-user
