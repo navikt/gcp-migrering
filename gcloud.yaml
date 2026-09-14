@@ -6,8 +6,6 @@ metadata:
 spec:
   image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql-gcp-18:2026-06-05-102735-c7bb1e3
   filesFrom:
-  - secret: migration-user
-    mountPath: /var/run/secrets/nais.io/migration-user
   - emptyDir: {}
     mountPath: /db/.config
   replicas:
