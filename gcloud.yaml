@@ -4,7 +4,7 @@ kind: Application
 metadata:
   name: gcloud
 spec:
-  image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql-gcp-18:2026-06-05-102735-c7bb1e3
+  image: europe-north1-docker.pkg.dev/nais-io/nais/images/gcloud-psql-gcp-18:2026-10-28-142748-49a42a3
   filesFrom:
   - emptyDir: {}
     mountPath: /db/.config

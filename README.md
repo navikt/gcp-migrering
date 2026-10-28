@@ -18,4 +18,4 @@ kubectl exec -it <navn på pod> -- sh
 
 ## Innhold
 
-[gcloud pod spec](./gcloud.yaml) er pod spec'en som innholder alle verktøy man trenger. Denne er bygget fra [gcloud-psql repository](https://github.com/nais/gcloud-psql). Pod'en har ikke lenger et fysisk volum mountet da dette ikke er støttet on-premises, så dersom man skal eksportere store databaser må man benytte en annen metode. Disk'en tilgjengelig er oppad begrenset til det nodenden kjører på har tilgjengelig.
+[gcloud pod spec](./gcloud.yaml) er pod spec'en som innholder alle verktøy man trenger. Denne er bygget fra [gcloud-psql repository](https://github.com/nais/gcloud-psql). Pod'en har ikke lenger et fysisk volum mountet da dette ikke er støttet on-premises, så dersom man skal eksportere store databaser må man benytte en annen metode. Disk tilgjengelig er oppad begrenset til det noden den kjører på har tilgjengelig.
